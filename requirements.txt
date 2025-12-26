@@ -16,3 +16,6 @@ ipykernel
 # Optional: Specialized Regression models (common next steps after Linear Regression)
 xgboost
 scipy
+
+#for web scraping
+beautifulsoup4
