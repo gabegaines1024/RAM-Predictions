@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import time
+import cloudscraper
 
 def scrape_ram_data(url):
     scraper = cloudscraper.create_scraper()
@@ -42,6 +43,6 @@ def scrape_ram_data(url):
     print(f"Success! Saved {len(df)} rows to {save_path}")
     return df
 
-target_url = "https://pcpartpicker.com/products/memory/"
+target_url = "https://pcpartpicker.com/trends/price/memory/"
 df = scrape_ram_data(target_url)
 print(df)
