@@ -5,28 +5,35 @@ import re
 from datetime import date
 
 
-def scrape_newegg_ram():
+def scrape_ram():
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-    requests_ddr4 = rq.get("https://www.newegg.com/p/pl?N=100007611%20600561665", headers=headers)
-    requests_ddr5 = rq.get("https://www.newegg.com/p/pl?N=100007611%20601410157", headers=headers)
-    soup_ddr4 = soup(requests_ddr4.text, "html.parser")
-    soup_ddr5 = soup(requests_ddr5.text, "html.parser")
-    return soup_ddr4, soup_ddr5
+    
+    # Newegg
+    requests_ddr4_newegg = rq.get("https://www.newegg.com/p/pl?N=100007611%20600561665", headers=headers)
+    requests_ddr5_newegg = rq.get("https://www.newegg.com/p/pl?N=100007611%20601410157", headers=headers)
+    
+    # Best Buy (fixed missing https:// on DDR4)
+    requests_ddr4_bestbuy = rq.get("https://www.bestbuy.com/site/searchpage.jsp?_dyncharset=UTF-8&browsedCategory=abcat0506000&id=pcat17071&iht=n&ks=960&list=y&qp=typeofmemoryram_facet%3DMemory%20Type~DDR4&sc=Global&st=categoryid%24abcat0506000&type=page&usc=All%20Categories", headers=headers)
+    requests_ddr5_bestbuy = rq.get("https://www.bestbuy.com/site/searchpage.jsp?_dyncharset=UTF-8&browsedCategory=abcat0506000&id=pcat17071&iht=n&ks=960&list=y&qp=typeofmemoryram_facet%3DMemory%20Type~DDR5&sc=Global&st=categoryid%24abcat0506000&type=page&usc=All%20Categories", headers=headers)
+
+    soup_ddr4_newegg = soup(requests_ddr4_newegg.text, "html.parser")
+    soup_ddr5_newegg = soup(requests_ddr5_newegg.text, "html.parser")
+    soup_ddr4_bestbuy = soup(requests_ddr4_bestbuy.text, "html.parser")
+    soup_ddr5_bestbuy = soup(requests_ddr5_bestbuy.text, "html.parser")
+    
+    return soup_ddr4_newegg, soup_ddr5_newegg, soup_ddr4_bestbuy, soup_ddr5_bestbuy
 
 
-# --- Extraction Helpers ---
+# --- Shared Extraction Helpers ---
 
 def extract_model(title: str) -> str:
     """Extract model name (second word onward until specs start)."""
-    # Typically: "Corsair Vengeance RGB Pro 16GB DDR4 3200MHz..."
-    # We want "Vengeance RGB Pro" - everything after brand, before capacity/specs
     parts = title.split()
     if len(parts) < 2:
         return ""
     
     model_parts = []
-    for part in parts[1:]:  # Skip brand (first word)
-        # Stop when we hit capacity (e.g., "16GB") or DDR spec
+    for part in parts[1:]:
         if re.match(r'^\d+GB', part, re.IGNORECASE) or re.match(r'^DDR\d', part, re.IGNORECASE):
             break
         model_parts.append(part)
@@ -36,10 +43,9 @@ def extract_model(title: str) -> str:
 
 def extract_capacity(title: str) -> int | None:
     """Extract capacity in GB from title (e.g., '16GB' -> 16)."""
-    # Match patterns like "16GB", "32 GB", "2x8GB", "2 x 16GB"
+    # Kit format: 2x8GB = 16GB total
     match = re.search(r'(\d+)\s*x\s*(\d+)\s*GB', title, re.IGNORECASE)
     if match:
-        # Kit format: 2x8GB = 16GB total
         return int(match.group(1)) * int(match.group(2))
     
     match = re.search(r'(\d+)\s*GB', title, re.IGNORECASE)
@@ -50,18 +56,15 @@ def extract_capacity(title: str) -> int | None:
 
 
 def extract_frequency(title: str) -> int | None:
-    """Extract frequency in MHz from title (e.g., 'DDR4 3200' -> 3200)."""
-    # Common patterns: "3200MHz", "DDR4-3200", "PC4-25600" (need to convert)
+    """Extract frequency in MHz from title."""
     match = re.search(r'(\d{4,5})\s*MHz', title, re.IGNORECASE)
     if match:
         return int(match.group(1))
     
-    # DDR4-3200 or DDR5-6000 format
     match = re.search(r'DDR\d[- ](\d{4,5})', title, re.IGNORECASE)
     if match:
         return int(match.group(1))
     
-    # PC4-25600 format (need to divide by 8 for MHz: 25600/8 = 3200)
     match = re.search(r'PC\d[- ](\d{5})', title, re.IGNORECASE)
     if match:
         return int(match.group(1)) // 8
@@ -69,16 +72,12 @@ def extract_frequency(title: str) -> int | None:
     return None
 
 
-def extract_cas(item) -> int | None:
-    """Extract CAS latency from product specs or title."""
-    text = item.get_text()
-    
-    # Look for "CL16", "CAS 16", "C16", etc.
+def extract_cas_from_text(text: str) -> int | None:
+    """Extract CAS latency from text."""
     match = re.search(r'(?:CAS|CL|C)[\s-]*(\d{1,2})', text, re.IGNORECASE)
     if match:
         return int(match.group(1))
     
-    # Sometimes in timings: first number is CAS (16-18-18-36)
     match = re.search(r'\b(\d{1,2})-\d{1,2}-\d{1,2}-\d{1,2}\b', text)
     if match:
         return int(match.group(1))
@@ -86,42 +85,33 @@ def extract_cas(item) -> int | None:
     return None
 
 
-def extract_timings(item) -> str | None:
+def extract_timings_from_text(text: str) -> str | None:
     """Extract full timing string (e.g., '16-18-18-36')."""
-    text = item.get_text()
-    
-    # Standard timing format: CL-tRCD-tRP-tRAS (e.g., 16-18-18-36)
     match = re.search(r'\b(\d{1,2}-\d{1,2}-\d{1,2}-\d{1,3})\b', text)
     if match:
         return match.group(1)
-    
     return None
 
 
-def extract_voltage(item) -> float | None:
+def extract_voltage_from_text(text: str) -> float | None:
     """Extract voltage (e.g., 1.35V -> 1.35)."""
-    text = item.get_text()
-    
-    # Match 1.2V, 1.35V, 1.45 V, etc.
     match = re.search(r'(\d\.\d{1,2})\s*V', text, re.IGNORECASE)
     if match:
         return float(match.group(1))
-    
     return None
 
 
-def extract_price(item) -> float | None:
-    """Extract price in USD."""
-    # Newegg price structure: <li class="price-current">$<strong>89</strong><sup>.99</sup></li>
+# --- Newegg-Specific Helpers ---
+
+def extract_price_newegg(item) -> float | None:
+    """Extract price from Newegg product."""
     price_elem = item.select_one(".price-current")
     if price_elem:
-        # Get all text, remove $ and commas
         price_text = price_elem.get_text().strip()
         match = re.search(r'[\$]?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)', price_text)
         if match:
             return float(match.group(1).replace(',', ''))
     
-    # Fallback: search for price pattern in item text
     text = item.get_text()
     match = re.search(r'\$(\d{1,3}(?:,\d{3})*\.\d{2})', text)
     if match:
@@ -130,9 +120,8 @@ def extract_price(item) -> float | None:
     return None
 
 
-def extract_review_count(item) -> int | None:
-    """Extract number of reviews."""
-    # Newegg format: "(1,247)" or "1247 Reviews"
+def extract_review_count_newegg(item) -> int | None:
+    """Extract number of reviews from Newegg."""
     rating_elem = item.select_one(".item-rating-num")
     if rating_elem:
         text = rating_elem.get_text()
@@ -140,7 +129,6 @@ def extract_review_count(item) -> int | None:
         if match:
             return int(match.group(1).replace(',', ''))
     
-    # Fallback
     text = item.get_text()
     match = re.search(r'\(([\d,]+)\)\s*(?:reviews?)?', text, re.IGNORECASE)
     if match:
@@ -149,18 +137,15 @@ def extract_review_count(item) -> int | None:
     return None
 
 
-def extract_rating(item) -> float | None:
-    """Extract average rating (out of 5)."""
-    # Newegg uses egg icons, rating often in aria-label or title attribute
+def extract_rating_newegg(item) -> float | None:
+    """Extract average rating from Newegg."""
     rating_elem = item.select_one(".item-rating")
     if rating_elem:
-        # Check for aria-label like "Rating: 4.8 out of 5"
         aria = rating_elem.get('aria-label', '') or rating_elem.get('title', '')
         match = re.search(r'(\d(?:\.\d)?)\s*(?:out of|\/)\s*5', aria, re.IGNORECASE)
         if match:
             return float(match.group(1))
         
-        # Count filled eggs (each egg = 1 point, typically 5 eggs max)
         filled = len(rating_elem.select(".rating-egg-full, [class*='rating-5'], [class*='rating-4']"))
         if filled > 0:
             return float(filled)
@@ -168,52 +153,179 @@ def extract_rating(item) -> float | None:
     return None
 
 
-# --- Main Functions ---
+# --- Best Buy-Specific Helpers ---
 
-def parse_product(item, ddr_gen: str) -> dict | None:
-    """Extract data from a single product container."""
+def extract_price_bestbuy(item) -> float | None:
+    """Extract price from Best Buy product."""
+    # Best Buy price selectors
+    price_elem = item.select_one(".priceView-customer-price span, .priceView-hero-price span")
+    if price_elem:
+        price_text = price_elem.get_text().strip()
+        match = re.search(r'\$?([\d,]+\.?\d*)', price_text)
+        if match:
+            return float(match.group(1).replace(',', ''))
+    
+    # Fallback: look for price in data attributes
+    price_attr = item.get('data-price') or item.select_one('[data-price]')
+    if price_attr:
+        if isinstance(price_attr, str):
+            return float(price_attr)
+        else:
+            return float(price_attr.get('data-price', 0))
+    
+    # Last fallback: regex on text
+    text = item.get_text()
+    match = re.search(r'\$(\d{1,3}(?:,\d{3})*\.\d{2})', text)
+    if match:
+        return float(match.group(1).replace(',', ''))
+    
+    return None
+
+
+def extract_review_count_bestbuy(item) -> int | None:
+    """Extract number of reviews from Best Buy."""
+    # Best Buy uses .c-reviews or .c-ratings-reviews
+    review_elem = item.select_one(".c-reviews, .c-ratings-reviews-count")
+    if review_elem:
+        text = review_elem.get_text()
+        match = re.search(r'\(?([\d,]+)\)?(?:\s*reviews?)?', text, re.IGNORECASE)
+        if match:
+            return int(match.group(1).replace(',', ''))
+    
+    # Look for "Reviews" text
+    text = item.get_text()
+    match = re.search(r'([\d,]+)\s*(?:Reviews?|Ratings?)', text, re.IGNORECASE)
+    if match:
+        return int(match.group(1).replace(',', ''))
+    
+    return None
+
+
+def extract_rating_bestbuy(item) -> float | None:
+    """Extract average rating from Best Buy."""
+    # Best Buy stores rating in various ways
+    rating_elem = item.select_one(".c-ratings-reviews, [class*='rating']")
+    if rating_elem:
+        aria = rating_elem.get('aria-label', '') or rating_elem.get('title', '')
+        match = re.search(r'(\d(?:\.\d)?)\s*(?:out of|\/)\s*5', aria, re.IGNORECASE)
+        if match:
+            return float(match.group(1))
+        
+        # Sometimes just the number
+        match = re.search(r'Rating[:\s]*(\d(?:\.\d)?)', aria, re.IGNORECASE)
+        if match:
+            return float(match.group(1))
+    
+    # Check for data attribute
+    rating_attr = item.select_one('[data-rating], [data-average-rating]')
+    if rating_attr:
+        rating = rating_attr.get('data-rating') or rating_attr.get('data-average-rating')
+        if rating:
+            return float(rating)
+    
+    return None
+
+
+# --- Product Parsers ---
+
+def parse_newegg_product(item, ddr_gen: str) -> dict | None:
+    """Extract data from a Newegg product container."""
     try:
         title_elem = item.select_one(".item-title")
         if not title_elem:
             return None
             
         title = title_elem.text.strip()
+        text = item.get_text()
         brand = title.split()[0] if title else None
 
         return {
+            'source': 'newegg',
             'brand': brand,
             'model': extract_model(title),
             'ddr_generation': ddr_gen,
             'capacity_gb': extract_capacity(title),
             'frequency_mhz': extract_frequency(title),
-            'cas_latency': extract_cas(item),
-            'timings': extract_timings(item),
-            'voltage': extract_voltage(item),
-            'price_usd': extract_price(item),
-            'in_stock': "OUT OF STOCK" not in item.text.upper(),
-            'num_reviews': extract_review_count(item),
-            'avg_rating': extract_rating(item),
+            'cas_latency': extract_cas_from_text(text),
+            'timings': extract_timings_from_text(text),
+            'voltage': extract_voltage_from_text(text),
+            'price_usd': extract_price_newegg(item),
+            'in_stock': "OUT OF STOCK" not in text.upper(),
+            'num_reviews': extract_review_count_newegg(item),
+            'avg_rating': extract_rating_newegg(item),
             'date_scraped': date.today().isoformat()
         }
     except Exception:
         return None
 
 
+def parse_bestbuy_product(item, ddr_gen: str) -> dict | None:
+    """Extract data from a Best Buy product container."""
+    try:
+        # Best Buy title selectors
+        title_elem = item.select_one(".sku-title a, .sku-header a, h4.sku-title")
+        if not title_elem:
+            # Fallback: any heading or link that looks like a title
+            title_elem = item.select_one("h4 a, .product-title a")
+        
+        if not title_elem:
+            return None
+            
+        title = title_elem.text.strip()
+        text = item.get_text()
+        brand = title.split()[0] if title else None
+
+        # Check stock status
+        in_stock = True
+        if any(x in text.upper() for x in ["SOLD OUT", "OUT OF STOCK", "COMING SOON", "NOT AVAILABLE"]):
+            in_stock = False
+
+        return {
+            'source': 'bestbuy',
+            'brand': brand,
+            'model': extract_model(title),
+            'ddr_generation': ddr_gen,
+            'capacity_gb': extract_capacity(title),
+            'frequency_mhz': extract_frequency(title),
+            'cas_latency': extract_cas_from_text(text),
+            'timings': extract_timings_from_text(text),
+            'voltage': extract_voltage_from_text(text),
+            'price_usd': extract_price_bestbuy(item),
+            'in_stock': in_stock,
+            'num_reviews': extract_review_count_bestbuy(item),
+            'avg_rating': extract_rating_bestbuy(item),
+            'date_scraped': date.today().isoformat()
+        }
+    except Exception:
+        return None
+
+
+# --- Main Functions ---
+
 def scrape_all_products() -> list[dict]:
-    """Scrape all RAM products from Newegg."""
-    soup_ddr4, soup_ddr5 = scrape_newegg_ram()
+    """Scrape all RAM products from Newegg and Best Buy."""
+    soup_ddr4_newegg, soup_ddr5_newegg, soup_ddr4_bestbuy, soup_ddr5_bestbuy = scrape_ram()
     
-    # Find product containers
-    items_ddr4 = soup_ddr4.select(".item-cell")
-    items_ddr5 = soup_ddr5.select(".item-cell")
+    # Newegg product containers
+    items_ddr4_newegg = soup_ddr4_newegg.select(".item-cell")
+    items_ddr5_newegg = soup_ddr5_newegg.select(".item-cell")
     
-    # List comprehension with helper function
+    # Best Buy product containers (different selectors)
+    items_ddr4_bestbuy = soup_ddr4_bestbuy.select(".sku-item, .list-item, [data-sku-id]")
+    items_ddr5_bestbuy = soup_ddr5_bestbuy.select(".sku-item, .list-item, [data-sku-id]")
+    
     products = [
-        p for item in items_ddr4 
-        if (p := parse_product(item, "DDR4"))
+        p for item in items_ddr4_newegg 
+        if (p := parse_newegg_product(item, "DDR4"))
     ] + [
-        p for item in items_ddr5 
-        if (p := parse_product(item, "DDR5"))
+        p for item in items_ddr5_newegg 
+        if (p := parse_newegg_product(item, "DDR5"))
+    ] + [
+        p for item in items_ddr4_bestbuy
+        if (p := parse_bestbuy_product(item, "DDR4"))
+    ] + [
+        p for item in items_ddr5_bestbuy
+        if (p := parse_bestbuy_product(item, "DDR5"))
     ]
     
     return products
@@ -227,4 +339,6 @@ def save_to_csv(filename: str = "ram_data.csv"):
     print(f"Saved {len(products)} products to {filename}")
     return df
 
-save_to_csv()
+
+if __name__ == "__main__":
+    save_to_csv()
