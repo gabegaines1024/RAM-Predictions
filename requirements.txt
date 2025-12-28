@@ -22,3 +22,4 @@ beautifulsoup4
 keepa
 requests
 lxml
+cloudscraper

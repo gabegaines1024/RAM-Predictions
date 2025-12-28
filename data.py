@@ -1,27 +1,155 @@
 import pandas as pd
 from bs4 import BeautifulSoup as soup
 import requests as rq
+import cloudscraper
 import re
 from datetime import date
+import time
 
 
-def scrape_ram():
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-    
-    # Newegg
-    requests_ddr4_newegg = rq.get("https://www.newegg.com/p/pl?N=100007611%20600561665", headers=headers)
-    requests_ddr5_newegg = rq.get("https://www.newegg.com/p/pl?N=100007611%20601410157", headers=headers)
-    
-    # Best Buy (fixed missing https:// on DDR4)
-    requests_ddr4_bestbuy = rq.get("https://www.bestbuy.com/site/searchpage.jsp?_dyncharset=UTF-8&browsedCategory=abcat0506000&id=pcat17071&iht=n&ks=960&list=y&qp=typeofmemoryram_facet%3DMemory%20Type~DDR4&sc=Global&st=categoryid%24abcat0506000&type=page&usc=All%20Categories", headers=headers)
-    requests_ddr5_bestbuy = rq.get("https://www.bestbuy.com/site/searchpage.jsp?_dyncharset=UTF-8&browsedCategory=abcat0506000&id=pcat17071&iht=n&ks=960&list=y&qp=typeofmemoryram_facet%3DMemory%20Type~DDR5&sc=Global&st=categoryid%24abcat0506000&type=page&usc=All%20Categories", headers=headers)
+# --- Scraping Functions ---
 
-    soup_ddr4_newegg = soup(requests_ddr4_newegg.text, "html.parser")
-    soup_ddr5_newegg = soup(requests_ddr5_newegg.text, "html.parser")
-    soup_ddr4_bestbuy = soup(requests_ddr4_bestbuy.text, "html.parser")
-    soup_ddr5_bestbuy = soup(requests_ddr5_bestbuy.text, "html.parser")
+def get_session():
+    """Create a requests session with proper headers."""
+    session = rq.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+    })
+    return session
+
+
+def scrape_newegg():
+    """Scrape Newegg using simple requests (works without JS)."""
+    session = get_session()
     
-    return soup_ddr4_newegg, soup_ddr5_newegg, soup_ddr4_bestbuy, soup_ddr5_bestbuy
+    requests_ddr4 = session.get("https://www.newegg.com/p/pl?N=100007611%20600561665", timeout=15)
+    requests_ddr5 = session.get("https://www.newegg.com/p/pl?N=100007611%20601410157", timeout=15)
+    
+    soup_ddr4 = soup(requests_ddr4.text, "html.parser")
+    soup_ddr5 = soup(requests_ddr5.text, "html.parser")
+    
+    return soup_ddr4, soup_ddr5
+
+
+def scrape_bhphoto():
+    """Scrape B&H Photo using cloudscraper (bypasses Cloudflare)."""
+    scraper = cloudscraper.create_scraper()
+    products = []
+    
+    # B&H Photo RAM categories
+    urls = {
+        "DDR4": "https://www.bhphotovideo.com/c/search?q=ddr4%20desktop%20memory&sts=ma",
+        "DDR5": "https://www.bhphotovideo.com/c/search?q=ddr5%20desktop%20memory&sts=ma",
+    }
+    
+    for ddr_type, url in urls.items():
+        try:
+            time.sleep(1)  # Be polite
+            response = scraper.get(url, timeout=30)
+            
+            if response.status_code == 200:
+                page = soup(response.text, "html.parser")
+                
+                # B&H uses data-selenium attributes for product containers
+                items = page.select('[data-selenium="miniProductPage"]')
+                
+                for item in items:
+                    product = parse_bhphoto_product(item, ddr_type)
+                    if product:
+                        products.append(product)
+                        
+        except Exception as e:
+            print(f"  B&H Photo failed for {ddr_type}: {e}")
+    
+    return products
+
+
+def parse_bhphoto_product(item, ddr_gen: str) -> dict | None:
+    """Parse a B&H Photo product container."""
+    try:
+        # Title - prefer h3 or description element, not empty links
+        title_elem = item.select_one('h3, [data-selenium="miniProductPageDescription"], [class*="name"]')
+        
+        if not title_elem:
+            return None
+        
+        title = title_elem.get_text(strip=True)
+        # Clean up B&H's concatenated BH#/MFR# suffix
+        title = re.sub(r'BH\s*#.*$', '', title).strip()
+        
+        if not title or len(title) < 5:
+            return None
+            
+        # Skip if not RAM (B&H search might include accessories)
+        if not any(x in title.upper() for x in ['DDR4', 'DDR5', 'MEMORY', 'RAM', 'GB']):
+            return None
+        
+        brand = title.split()[0] if title else None
+        
+        # Price - B&H shows price in cents without decimal (e.g., $19199 = $191.99)
+        price = None
+        price_elem = item.select_one('[class*="price"], [class*="Price"]')
+        if price_elem:
+            price_text = price_elem.get_text(strip=True)
+            match = re.search(r'\$?([\d,]+)', price_text)
+            if match:
+                raw_price = int(match.group(1).replace(',', ''))
+                # B&H stores price in cents if > 999 and no decimal in text
+                if raw_price > 999 and '.' not in price_text:
+                    price = raw_price / 100
+                else:
+                    price = float(raw_price)
+        
+        # Rating
+        rating = None
+        rating_elem = item.select_one('[data-selenium="ratingStars"], .rating, [class*="rating"]')
+        if rating_elem:
+            # B&H often uses aria-label for rating
+            aria = rating_elem.get('aria-label', '')
+            match = re.search(r'(\d(?:\.\d)?)\s*(?:out of|stars|/)\s*5?', aria, re.IGNORECASE)
+            if match:
+                rating = float(match.group(1))
+            else:
+                # Count filled stars
+                stars = len(rating_elem.select('[class*="filled"], [class*="full"]'))
+                if stars > 0:
+                    rating = float(stars)
+        
+        # Reviews
+        reviews = None
+        review_elem = item.select_one('[data-selenium="reviewCount"], [class*="review"]')
+        if review_elem:
+            review_text = review_elem.get_text(strip=True)
+            match = re.search(r'\(?([\d,]+)\)?', review_text)
+            if match:
+                reviews = int(match.group(1).replace(',', ''))
+        
+        # Stock status
+        text = item.get_text()
+        in_stock = not any(x in text.upper() for x in ["OUT OF STOCK", "SOLD OUT", "BACK-ORDER", "UNAVAILABLE"])
+        
+        return {
+            'source': 'bhphoto',
+            'brand': brand,
+            'model': extract_model(title),
+            'ddr_generation': ddr_gen,
+            'capacity_gb': extract_capacity(title),
+            'frequency_mhz': extract_frequency(title),
+            'cas_latency': extract_cas_from_text(title),
+            'timings': extract_timings_from_text(title),
+            'voltage': extract_voltage_from_text(title),
+            'price_usd': price,
+            'in_stock': in_stock,
+            'num_reviews': reviews,
+            'avg_rating': rating,
+            'date_scraped': date.today().isoformat()
+        }
+    except Exception:
+        return None
 
 
 # --- Shared Extraction Helpers ---
@@ -43,6 +171,8 @@ def extract_model(title: str) -> str:
 
 def extract_capacity(title: str) -> int | None:
     """Extract capacity in GB from title (e.g., '16GB' -> 16)."""
+    if not title:
+        return None
     # Kit format: 2x8GB = 16GB total
     match = re.search(r'(\d+)\s*x\s*(\d+)\s*GB', title, re.IGNORECASE)
     if match:
@@ -57,6 +187,8 @@ def extract_capacity(title: str) -> int | None:
 
 def extract_frequency(title: str) -> int | None:
     """Extract frequency in MHz from title."""
+    if not title:
+        return None
     match = re.search(r'(\d{4,5})\s*MHz', title, re.IGNORECASE)
     if match:
         return int(match.group(1))
@@ -74,6 +206,8 @@ def extract_frequency(title: str) -> int | None:
 
 def extract_cas_from_text(text: str) -> int | None:
     """Extract CAS latency from text."""
+    if not text:
+        return None
     match = re.search(r'(?:CAS|CL|C)[\s-]*(\d{1,2})', text, re.IGNORECASE)
     if match:
         return int(match.group(1))
@@ -87,6 +221,8 @@ def extract_cas_from_text(text: str) -> int | None:
 
 def extract_timings_from_text(text: str) -> str | None:
     """Extract full timing string (e.g., '16-18-18-36')."""
+    if not text:
+        return None
     match = re.search(r'\b(\d{1,2}-\d{1,2}-\d{1,2}-\d{1,3})\b', text)
     if match:
         return match.group(1)
@@ -95,6 +231,8 @@ def extract_timings_from_text(text: str) -> str | None:
 
 def extract_voltage_from_text(text: str) -> float | None:
     """Extract voltage (e.g., 1.35V -> 1.35)."""
+    if not text:
+        return None
     match = re.search(r'(\d\.\d{1,2})\s*V', text, re.IGNORECASE)
     if match:
         return float(match.group(1))
@@ -153,79 +291,6 @@ def extract_rating_newegg(item) -> float | None:
     return None
 
 
-# --- Best Buy-Specific Helpers ---
-
-def extract_price_bestbuy(item) -> float | None:
-    """Extract price from Best Buy product."""
-    # Best Buy price selectors
-    price_elem = item.select_one(".priceView-customer-price span, .priceView-hero-price span")
-    if price_elem:
-        price_text = price_elem.get_text().strip()
-        match = re.search(r'\$?([\d,]+\.?\d*)', price_text)
-        if match:
-            return float(match.group(1).replace(',', ''))
-    
-    # Fallback: look for price in data attributes
-    price_attr = item.get('data-price') or item.select_one('[data-price]')
-    if price_attr:
-        if isinstance(price_attr, str):
-            return float(price_attr)
-        else:
-            return float(price_attr.get('data-price', 0))
-    
-    # Last fallback: regex on text
-    text = item.get_text()
-    match = re.search(r'\$(\d{1,3}(?:,\d{3})*\.\d{2})', text)
-    if match:
-        return float(match.group(1).replace(',', ''))
-    
-    return None
-
-
-def extract_review_count_bestbuy(item) -> int | None:
-    """Extract number of reviews from Best Buy."""
-    # Best Buy uses .c-reviews or .c-ratings-reviews
-    review_elem = item.select_one(".c-reviews, .c-ratings-reviews-count")
-    if review_elem:
-        text = review_elem.get_text()
-        match = re.search(r'\(?([\d,]+)\)?(?:\s*reviews?)?', text, re.IGNORECASE)
-        if match:
-            return int(match.group(1).replace(',', ''))
-    
-    # Look for "Reviews" text
-    text = item.get_text()
-    match = re.search(r'([\d,]+)\s*(?:Reviews?|Ratings?)', text, re.IGNORECASE)
-    if match:
-        return int(match.group(1).replace(',', ''))
-    
-    return None
-
-
-def extract_rating_bestbuy(item) -> float | None:
-    """Extract average rating from Best Buy."""
-    # Best Buy stores rating in various ways
-    rating_elem = item.select_one(".c-ratings-reviews, [class*='rating']")
-    if rating_elem:
-        aria = rating_elem.get('aria-label', '') or rating_elem.get('title', '')
-        match = re.search(r'(\d(?:\.\d)?)\s*(?:out of|\/)\s*5', aria, re.IGNORECASE)
-        if match:
-            return float(match.group(1))
-        
-        # Sometimes just the number
-        match = re.search(r'Rating[:\s]*(\d(?:\.\d)?)', aria, re.IGNORECASE)
-        if match:
-            return float(match.group(1))
-    
-    # Check for data attribute
-    rating_attr = item.select_one('[data-rating], [data-average-rating]')
-    if rating_attr:
-        rating = rating_attr.get('data-rating') or rating_attr.get('data-average-rating')
-        if rating:
-            return float(rating)
-    
-    return None
-
-
 # --- Product Parsers ---
 
 def parse_newegg_product(item, ddr_gen: str) -> dict | None:
@@ -259,74 +324,42 @@ def parse_newegg_product(item, ddr_gen: str) -> dict | None:
         return None
 
 
-def parse_bestbuy_product(item, ddr_gen: str) -> dict | None:
-    """Extract data from a Best Buy product container."""
-    try:
-        # Best Buy title selectors
-        title_elem = item.select_one(".sku-title a, .sku-header a, h4.sku-title")
-        if not title_elem:
-            # Fallback: any heading or link that looks like a title
-            title_elem = item.select_one("h4 a, .product-title a")
-        
-        if not title_elem:
-            return None
-            
-        title = title_elem.text.strip()
-        text = item.get_text()
-        brand = title.split()[0] if title else None
-
-        # Check stock status
-        in_stock = True
-        if any(x in text.upper() for x in ["SOLD OUT", "OUT OF STOCK", "COMING SOON", "NOT AVAILABLE"]):
-            in_stock = False
-
-        return {
-            'source': 'bestbuy',
-            'brand': brand,
-            'model': extract_model(title),
-            'ddr_generation': ddr_gen,
-            'capacity_gb': extract_capacity(title),
-            'frequency_mhz': extract_frequency(title),
-            'cas_latency': extract_cas_from_text(text),
-            'timings': extract_timings_from_text(text),
-            'voltage': extract_voltage_from_text(text),
-            'price_usd': extract_price_bestbuy(item),
-            'in_stock': in_stock,
-            'num_reviews': extract_review_count_bestbuy(item),
-            'avg_rating': extract_rating_bestbuy(item),
-            'date_scraped': date.today().isoformat()
-        }
-    except Exception:
-        return None
-
-
 # --- Main Functions ---
 
 def scrape_all_products() -> list[dict]:
-    """Scrape all RAM products from Newegg and Best Buy."""
-    soup_ddr4_newegg, soup_ddr5_newegg, soup_ddr4_bestbuy, soup_ddr5_bestbuy = scrape_ram()
+    """Scrape all RAM products from multiple sources."""
+    products = []
     
-    # Newegg product containers
-    items_ddr4_newegg = soup_ddr4_newegg.select(".item-cell")
-    items_ddr5_newegg = soup_ddr5_newegg.select(".item-cell")
+    # Scrape Newegg (reliable, works with requests)
+    print("Scraping Newegg...")
+    try:
+        soup_ddr4_newegg, soup_ddr5_newegg = scrape_newegg()
+        
+        items_ddr4_newegg = soup_ddr4_newegg.select(".item-cell")
+        items_ddr5_newegg = soup_ddr5_newegg.select(".item-cell")
+        
+        products.extend([
+            p for item in items_ddr4_newegg 
+            if (p := parse_newegg_product(item, "DDR4"))
+        ])
+        products.extend([
+            p for item in items_ddr5_newegg 
+            if (p := parse_newegg_product(item, "DDR5"))
+        ])
+        
+        newegg_count = len([p for p in products if p['source'] == 'newegg'])
+        print(f"  Found {newegg_count} Newegg products")
+    except Exception as e:
+        print(f"  Newegg failed: {e}")
     
-    # Best Buy product containers (different selectors)
-    items_ddr4_bestbuy = soup_ddr4_bestbuy.select(".sku-item, .list-item, [data-sku-id]")
-    items_ddr5_bestbuy = soup_ddr5_bestbuy.select(".sku-item, .list-item, [data-sku-id]")
-    
-    products = [
-        p for item in items_ddr4_newegg 
-        if (p := parse_newegg_product(item, "DDR4"))
-    ] + [
-        p for item in items_ddr5_newegg 
-        if (p := parse_newegg_product(item, "DDR5"))
-    ] + [
-        p for item in items_ddr4_bestbuy
-        if (p := parse_bestbuy_product(item, "DDR4"))
-    ] + [
-        p for item in items_ddr5_bestbuy
-        if (p := parse_bestbuy_product(item, "DDR5"))
-    ]
+    # Scrape B&H Photo (works with cloudscraper)
+    print("Scraping B&H Photo...")
+    try:
+        bhphoto_products = scrape_bhphoto()
+        products.extend(bhphoto_products)
+        print(f"  Found {len(bhphoto_products)} B&H Photo products")
+    except Exception as e:
+        print(f"  B&H Photo failed: {e}")
     
     return products
 
@@ -336,7 +369,7 @@ def save_to_csv(filename: str = "ram_data.csv"):
     products = scrape_all_products()
     df = pd.DataFrame(products)
     df.to_csv(filename, index=False)
-    print(f"Saved {len(products)} products to {filename}")
+    print(f"\nSaved {len(products)} total products to {filename}")
     return df
 
 
