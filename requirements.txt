@@ -19,7 +19,6 @@ scipy
 
 #for web scraping
 beautifulsoup4
-keepa
 requests
 lxml
 cloudscraper

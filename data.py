@@ -5,6 +5,7 @@ import cloudscraper
 import re
 from datetime import date
 import time
+from pathlib import Path
 
 
 # --- Scraping Functions ---
@@ -364,14 +365,72 @@ def scrape_all_products() -> list[dict]:
     return products
 
 
-def save_to_csv(filename: str = "ram_data.csv"):
-    """Scrape products and save to CSV."""
+def save_to_csv(filename: str = "ram_data.csv", append: bool = False):
+    """
+    Scrape products and save to CSV.
+    
+    Args:
+        filename: Output CSV filename
+        append: If True, append to existing file (building price history over time)
+    """
     products = scrape_all_products()
-    df = pd.DataFrame(products)
-    df.to_csv(filename, index=False)
-    print(f"\nSaved {len(products)} total products to {filename}")
-    return df
+    new_df = pd.DataFrame(products)
+    
+    if append and Path(filename).exists():
+        # Load existing data and append
+        existing_df = pd.read_csv(filename)
+        
+        # Combine and remove exact duplicates (same product, same date, same price)
+        combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+        
+        # Define columns that identify a unique price point
+        dedup_cols = ['source', 'brand', 'model', 'ddr_generation', 'capacity_gb', 
+                      'frequency_mhz', 'price_usd', 'date_scraped']
+        # Only use columns that exist
+        dedup_cols = [c for c in dedup_cols if c in combined_df.columns]
+        
+        combined_df = combined_df.drop_duplicates(subset=dedup_cols, keep='last')
+        combined_df = combined_df.sort_values(['brand', 'model', 'date_scraped'])
+        
+        combined_df.to_csv(filename, index=False)
+        print(f"\nAppended to {filename}: {len(new_df)} new rows, {len(combined_df)} total rows")
+        return combined_df
+    else:
+        new_df.to_csv(filename, index=False)
+        print(f"\nSaved {len(products)} products to {filename}")
+        return new_df
+
+
+def get_price_history(df: pd.DataFrame, brand: str = None, model: str = None) -> pd.DataFrame:
+    """
+    Get price history for a specific product or brand.
+    
+    Args:
+        df: DataFrame with price data
+        brand: Filter by brand (optional)
+        model: Filter by model (optional, substring match)
+    
+    Returns:
+        DataFrame with price history sorted by date
+    """
+    filtered = df.copy()
+    
+    if brand:
+        filtered = filtered[filtered['brand'].str.upper() == brand.upper()]
+    
+    if model:
+        filtered = filtered[filtered['model'].str.contains(model, case=False, na=False)]
+    
+    return filtered.sort_values('date_scraped')
 
 
 if __name__ == "__main__":
-    save_to_csv()
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Scrape RAM prices")
+    parser.add_argument("--append", action="store_true", help="Append to existing CSV (build history)")
+    parser.add_argument("--output", "-o", default="ram_data.csv", help="Output filename")
+    
+    args = parser.parse_args()
+    
+    save_to_csv(filename=args.output, append=args.append)
