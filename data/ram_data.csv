@@ -1,0 +1,115 @@
+source,brand,model,ddr_generation,capacity_gb,frequency_mhz,cas_latency,timings,voltage,price_usd,in_stock,num_reviews,avg_rating,date_scraped
+newegg,G.SKILL,Ripjaws V Series,DDR4,32,3200.0,4.0,,1.35,209.99,True,7990.0,1.0,2025-12-29
+newegg,G.SKILL,Ripjaws V Series,DDR4,16,3200.0,4.0,,1.35,114.99,True,7990.0,1.0,2025-12-29
+newegg,G.SKILL,TridentZ RGB Series,DDR4,32,3600.0,4.0,,1.35,219.99,True,4657.0,1.0,2025-12-29
+newegg,G.SKILL,Ripjaws V Series,DDR4,32,3600.0,4.0,,1.35,209.99,True,7990.0,1.0,2025-12-29
+newegg,G.SKILL,Ripjaws V Series,DDR4,32,3600.0,4.0,,1.35,224.99,True,7990.0,1.0,2025-12-29
+newegg,Team,T-FORCE VULCAN Z,DDR4,32,3200.0,4.0,,1.35,239.99,True,246.0,1.0,2025-12-29
+newegg,Team,T-FORCE VULCAN Z,DDR4,32,3600.0,4.0,,1.35,259.99,True,156.0,1.0,2025-12-29
+newegg,Kingston,FURY Beast,DDR4,32,3200.0,4.0,,1.35,189.99,True,27.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance LPX,DDR4,32,3200.0,4.0,,1.35,179.99,True,318.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance RGB Pro,DDR4,32,3200.0,4.0,,1.35,199.99,True,132.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance LPX,DDR4,16,3200.0,4.0,,1.35,104.99,True,126.0,1.0,2025-12-29
+newegg,G.SKILL,Ripjaws V Series,DDR4,16,3200.0,4.0,,1.35,107.99,True,7990.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance RGB Pro SL,DDR4,16,3200.0,4.0,,1.35,114.99,True,289.0,1.0,2025-12-29
+newegg,G.SKILL,Trident Z Neo (For AMD Ryzen) Series,DDR4,32,3600.0,4.0,,1.35,239.99,True,2170.0,1.0,2025-12-29
+newegg,G.SKILL,TridentZ RGB Series,DDR4,32,3600.0,4.0,,1.35,227.99,True,4657.0,1.0,2025-12-29
+newegg,G.SKILL,Ripjaws V Series,DDR4,16,3600.0,4.0,,1.35,114.99,True,7990.0,1.0,2025-12-29
+newegg,Kingston,FURY Beast,DDR4,32,3200.0,4.0,,1.35,204.99,True,1.0,,2025-12-29
+newegg,CORSAIR,Vengeance RGB Pro SL,DDR4,16,3200.0,4.0,,1.35,114.99,True,290.0,1.0,2025-12-29
+newegg,G.SKILL,Aegis,DDR4,32,2666.0,4.0,,1.2,179.99,True,1399.0,1.0,2025-12-29
+newegg,G.SKILL,Ripjaws V Series,DDR4,64,3200.0,4.0,,1.35,399.99,True,7990.0,1.0,2025-12-29
+newegg,Silicon,Power,DDR4,16,3200.0,4.0,,1.35,116.79,True,154.0,1.0,2025-12-29
+newegg,Patriot,Viper Steel,DDR4,32,3200.0,4.0,,1.35,172.99,True,102.0,1.0,2025-12-29
+newegg,Patriot,Viper Steel,DDR4,32,3600.0,4.0,,1.35,179.99,True,102.0,1.0,2025-12-29
+newegg,Patriot,Viper Steel RGB,DDR4,32,3600.0,4.0,,1.35,209.99,True,5.0,1.0,2025-12-29
+newegg,Team,T-Create Classic 10 LAYERS,DDR4,32,3200.0,10.0,,1.2,229.99,True,44.0,1.0,2025-12-29
+newegg,G.SKILL,Aegis,DDR4,32,3200.0,4.0,,1.35,214.99,True,15.0,1.0,2025-12-29
+newegg,Patriot,Signature Line,DDR4,32,2666.0,4.0,,1.2,154.99,True,,,2025-12-29
+newegg,Team,Elite,DDR4,32,3200.0,4.0,,1.2,250.99,True,38.0,1.0,2025-12-29
+newegg,G.SKILL,Value Series,DDR4,32,2666.0,4.0,,1.2,196.99,True,6.0,1.0,2025-12-29
+newegg,Team,Elite,DDR4,8,3200.0,4.0,,1.2,60.99,True,38.0,1.0,2025-12-29
+newegg,Black,Diamond Memory,DDR4,32,3200.0,4.0,,,174.99,True,,,2025-12-29
+newegg,Black,Diamond Memory,DDR4,8,2400.0,4.0,,,43.95,True,2.0,1.0,2025-12-29
+newegg,Black,Diamond Memory,DDR4,16,2666.0,4.0,,,70.95,True,,,2025-12-29
+newegg,Black,Diamond Memory,DDR4,16,2400.0,4.0,,,70.95,True,2.0,1.0,2025-12-29
+newegg,Black,Diamond Memory,DDR4,32,2133.0,4.0,,,174.99,True,,,2025-12-29
+newegg,Black,Diamond Memory,DDR4,32,2666.0,4.0,,,174.99,True,,,2025-12-29
+newegg,G.SKILL,Flare X5 Series AMD EXPO,DDR5,32,6000.0,36.0,,1.35,449.99,True,396.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance,DDR5,32,6000.0,5.0,,1.35,393.99,True,568.0,1.0,2025-12-29
+newegg,G.SKILL,Trident Z5 RGB Series,DDR5,32,6000.0,5.0,,1.35,319.99,True,230.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance RGB,DDR5,32,6000.0,5.0,,1.4,437.99,True,317.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance RGB,DDR5,32,6000.0,5.0,,1.4,409.99,True,150.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance RGB,DDR5,32,6000.0,5.0,,1.4,439.99,True,12.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance RGB,DDR5,32,6400.0,5.0,,1.35,407.99,True,317.0,1.0,2025-12-29
+newegg,Team,T-Force Delta RGB,DDR5,32,6400.0,5.0,,1.35,429.99,True,580.0,1.0,2025-12-29
+newegg,G.SKILL,Trident Z5 RGB Series,DDR5,64,6000.0,5.0,,1.35,689.99,True,11.0,1.0,2025-12-29
+newegg,G.SKILL,Trident Z5 Neo RGB Series,DDR5,64,6000.0,5.0,,1.4,717.99,True,664.0,1.0,2025-12-29
+newegg,G.SKILL,Flare X5,DDR5,32,6000.0,5.0,,1.35,449.99,True,396.0,1.0,2025-12-29
+newegg,G.SKILL,Trident Z5 Neo RGB Series AMD EXPO,DDR5,32,6000.0,5.0,,1.35,469.99,True,664.0,1.0,2025-12-29
+newegg,G.SKILL,Trident Z5 RGB Series,DDR5,64,6400.0,5.0,,1.4,729.99,True,163.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance RGB,DDR5,32,6000.0,5.0,,1.4,409.99,True,82.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance,DDR5,32,6000.0,5.0,,1.3,394.99,True,2.0,1.0,2025-12-29
+newegg,G.SKILL,Flare X Series,DDR5,64,6000.0,5.0,,1.4,849.99,True,396.0,1.0,2025-12-29
+newegg,G.SKILL,Trident Z5 Royal Series,DDR5,64,6400.0,5.0,,1.45,819.99,True,49.0,1.0,2025-12-29
+newegg,Patriot,Viper Venom,DDR5,32,6000.0,5.0,,1.25,334.99,True,162.0,1.0,2025-12-29
+newegg,Patriot,Viper Venom,DDR5,32,6000.0,5.0,,1.35,359.99,True,162.0,1.0,2025-12-29
+newegg,G.SKILL,Ripjaws S5 Series,DDR5,64,6000.0,5.0,,1.35,659.99,True,9.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance RGB,DDR5,64,6000.0,5.0,,1.35,876.99,True,317.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance RGB,DDR5,64,6400.0,5.0,32-40-40-40,1.4,899.99,True,317.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance RGB,DDR5,32,6000.0,5.0,,1.35,404.99,True,,,2025-12-29
+newegg,CORSAIR,Vengeance RGB,DDR5,32,6000.0,5.0,,1.4,442.99,True,12.0,1.0,2025-12-29
+newegg,G.SKILL,Ripjaws S5 Series,DDR5,32,6000.0,5.0,,1.35,349.99,True,347.0,1.0,2025-12-29
+newegg,G.SKILL,Trident Z5 Neo Series,DDR5,64,6000.0,5.0,,1.4,849.99,True,664.0,1.0,2025-12-29
+newegg,CORSAIR,Dominator Titanium,DDR5,64,6000.0,5.0,,1.4,949.99,True,69.0,1.0,2025-12-29
+newegg,G.SKILL,Trident Z5 Neo RGB Series,DDR5,128,6000.0,5.0,,1.35,1267.99,True,8.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance RGB,DDR5,32,6000.0,5.0,,1.3,409.99,True,4.0,1.0,2025-12-29
+newegg,G.SKILL,Trident Z5 Neo Series,DDR5,32,6000.0,5.0,,1.35,439.99,True,664.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance,DDR5,32,5200.0,5.0,,1.25,385.99,True,568.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance,DDR5,32,6000.0,5.0,,1.4,427.99,True,568.0,1.0,2025-12-29
+newegg,CORSAIR,Vengeance,DDR5,64,5600.0,5.0,,1.25,749.99,True,77.0,1.0,2025-12-29
+newegg,G.SKILL,Trident Z5 Neo Series AMD EXPO,DDR5,32,6000.0,5.0,,1.35,399.99,True,664.0,1.0,2025-12-29
+newegg,Team,T-Force Delta RGB,DDR5,32,6000.0,5.0,,1.35,,False,580.0,1.0,2025-12-29
+newegg,Team,Group T-CREATE EXPERT,DDR5,32,6000.0,5.0,,1.35,,False,203.0,1.0,2025-12-29
+bhphoto,Crucial,32GB,DDR4,32,3200.0,,,,191.99,True,96.0,,2025-12-29
+bhphoto,Crucial,16GB,DDR4,16,3200.0,,,,96.99,True,96.0,,2025-12-29
+bhphoto,Crucial,16GB,DDR4,16,3200.0,,,,91.99,True,96.0,,2025-12-29
+bhphoto,Crucial,64GB,DDR4,64,3200.0,,,,380.99,True,96.0,,2025-12-29
+bhphoto,PNY,32GB,DDR4,32,3200.0,,,,335.16,True,2.0,,2025-12-29
+bhphoto,PNY,16GB,DDR4,16,3200.0,,,,200.06,True,17.0,,2025-12-29
+bhphoto,PNY,16GB,DDR4,16,3200.0,,,,183.51,False,5.0,,2025-12-29
+bhphoto,PNY,32GB,DDR4,32,3600.0,,,,387.95,False,1.0,,2025-12-29
+bhphoto,PNY,16GB,DDR4,16,3600.0,,,,201.95,False,1.0,,2025-12-29
+bhphoto,PNY,16GB,DDR4,16,3200.0,,,,149.3,True,4.0,,2025-12-29
+bhphoto,Crucial,32GB,DDR4,32,3200.0,,,,183.99,False,95.0,,2025-12-29
+bhphoto,PNY,32GB,DDR4,32,3600.0,,,,,True,1.0,,2025-12-29
+bhphoto,PNY,16GB,DDR4,16,3600.0,,,,,True,3.0,,2025-12-29
+bhphoto,CORSAIR,32GB,DDR4,32,,,,,188.99,False,1.0,,2025-12-29
+bhphoto,CORSAIR,16GB,DDR4,16,,,,,124.99,False,1.0,,2025-12-29
+bhphoto,PNY,32GB,DDR4,32,3200.0,,,,367.5,False,17.0,,2025-12-29
+bhphoto,HP,8GB,DDR4,8,3200.0,,,,63.16,True,,,2025-12-29
+bhphoto,Crucial,16GB,DDR5,16,5600.0,,,,151.99,True,25.0,,2025-12-29
+bhphoto,Crucial,16GB,DDR5,16,5600.0,,,,144.99,True,25.0,,2025-12-29
+bhphoto,Silicon,Power,DDR5,32,6000.0,,,,479.99,True,22.0,,2025-12-29
+bhphoto,Silicon,Power,DDR5,32,6000.0,,,,509.99,True,22.0,,2025-12-29
+bhphoto,Silicon,Power,DDR5,32,6000.0,,,,489.99,True,22.0,,2025-12-29
+bhphoto,Silicon,Power,DDR5,64,6000.0,,,,770.0,True,22.0,,2025-12-29
+bhphoto,Silicon,Power,DDR5,64,6000.0,,,,922.0,True,22.0,,2025-12-29
+bhphoto,Silicon,Power,DDR5,32,6000.0,,,,474.99,True,22.0,,2025-12-29
+bhphoto,Silicon,Power,DDR5,64,6000.0,,,,799.99,True,22.0,,2025-12-29
+bhphoto,Silicon,Power,DDR5,64,6000.0,,,,888.99,False,22.0,,2025-12-29
+bhphoto,PNY,32GB,DDR5,32,5600.0,,,,522.01,False,1.0,,2025-12-29
+bhphoto,PNY,32GB,DDR5,32,6000.0,,,,,False,,,2025-12-29
+bhphoto,Crucial,8GB,DDR5,8,5600.0,,,,72.99,False,25.0,,2025-12-29
+bhphoto,Crucial,32GB,DDR5,32,5600.0,,,,281.99,False,25.0,,2025-12-29
+bhphoto,Crucial,64GB,DDR5,64,5600.0,,,,585.99,False,24.0,,2025-12-29
+bhphoto,Crucial,32GB,DDR5,32,5600.0,,,,300.99,False,25.0,,2025-12-29
+bhphoto,PNY,32GB,DDR5,32,6000.0,,,,,True,,,2025-12-29
+bhphoto,PNY,32GB,DDR5,32,6400.0,,,,,True,,,2025-12-29
+bhphoto,PNY,32GB,DDR5,32,6000.0,,,,,True,,,2025-12-29
+bhphoto,PNY,32GB,DDR5,32,6400.0,,,,,True,1.0,,2025-12-29
+bhphoto,Silicon,Power,DDR5,64,5600.0,,,,,True,1.0,,2025-12-29
+bhphoto,PNY,64GB,DDR5,64,6000.0,,,,,True,,,2025-12-29
+bhphoto,HP,32GB,DDR5,32,5600.0,,,,329.0,True,,,2025-12-29
+bhphoto,HP,16GB,DDR5,16,5600.0,,,,174.0,True,,,2025-12-29
+bhphoto,Crucial,8GB,DDR5,8,4800.0,,,,69.99,False,57.0,,2025-12-29
