@@ -10,6 +10,7 @@ dependencies = [
     "ipykernel>=7.1.0",
     "jupyterlab>=4.5.1",
     "keepa>=1.4.0",
+    "lxml>=6.0.2",
     "matplotlib>=3.10.8",
     "numpy>=2.4.0",
     "pandas>=2.3.3",

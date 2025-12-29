@@ -1,6 +1,7 @@
 # Data Manipulation & Math
 numpy
 pandas
+matplotlib
 
 # Machine Learning
 scikit-learn
@@ -12,10 +13,6 @@ seaborn
 # Environment & Notebooks
 jupyterlab
 ipykernel
-
-# Optional: Specialized Regression models (common next steps after Linear Regression)
-xgboost
-scipy
 
 #for web scraping
 beautifulsoup4
