@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup as soup
 import requests as rq
 import cloudscraper
 import re
-from datetime import date
+from datetime import date, datetime, timedelta
 import time
 from pathlib import Path
 
@@ -401,6 +401,162 @@ def save_to_csv(filename: str = "ram_data.csv", append: bool = False):
         return new_df
 
 
+# --- Wayback Machine Historical Scraping ---
+
+def get_wayback_snapshots(url: str, from_date: str = None, to_date: str = None) -> list[dict]:
+    """
+    Get available Wayback Machine snapshots for a URL.
+    
+    Args:
+        url: The URL to find snapshots for
+        from_date: Start date (YYYYMMDD format), defaults to 1 year ago
+        to_date: End date (YYYYMMDD format), defaults to today
+    
+    Returns:
+        List of snapshot info dicts with 'timestamp' and 'url' keys
+    """
+    if not from_date:
+        from_date = (datetime.now() - timedelta(days=365)).strftime("%Y%m%d")
+    if not to_date:
+        to_date = datetime.now().strftime("%Y%m%d")
+    
+    # Wayback CDX API - returns list of snapshots
+    cdx_url = f"https://web.archive.org/cdx/search/cdx?url={url}&from={from_date}&to={to_date}&output=json&fl=timestamp,original,statuscode"
+    
+    try:
+        response = rq.get(cdx_url, timeout=30)
+        if response.status_code != 200:
+            print(f"  Wayback API returned {response.status_code}")
+            return []
+        
+        data = response.json()
+        if len(data) < 2:  # First row is headers
+            return []
+        
+        snapshots = []
+        seen_dates = set()
+        
+        for row in data[1:]:  # Skip header row
+            timestamp, original, status = row[0], row[1], row[2]
+            if status != "200":
+                continue
+            
+            # Only keep one snapshot per month to avoid too many requests
+            month_key = timestamp[:6]  # YYYYMM
+            if month_key in seen_dates:
+                continue
+            seen_dates.add(month_key)
+            
+            snapshot_url = f"https://web.archive.org/web/{timestamp}/{original}"
+            snapshot_date = datetime.strptime(timestamp[:8], "%Y%m%d").strftime("%Y-%m-%d")
+            
+            snapshots.append({
+                'timestamp': timestamp,
+                'date': snapshot_date,
+                'url': snapshot_url
+            })
+        
+        return snapshots
+        
+    except Exception as e:
+        print(f"  Wayback API error: {e}")
+        return []
+
+
+def scrape_wayback_newegg(months_back: int = 12) -> list[dict]:
+    """
+    Scrape historical Newegg prices from Wayback Machine.
+    
+    Args:
+        months_back: How many months of history to fetch
+    
+    Returns:
+        List of product dicts with historical prices
+    """
+    products = []
+    session = get_session()
+    
+    # Newegg RAM listing URLs
+    urls = {
+        "DDR4": "https://www.newegg.com/p/pl?N=100007611%20600561665",
+        "DDR5": "https://www.newegg.com/p/pl?N=100007611%20601410157",
+    }
+    
+    from_date = (datetime.now() - timedelta(days=months_back * 30)).strftime("%Y%m%d")
+    
+    for ddr_type, url in urls.items():
+        print(f"  Finding Wayback snapshots for {ddr_type}...")
+        snapshots = get_wayback_snapshots(url, from_date=from_date)
+        print(f"    Found {len(snapshots)} monthly snapshots")
+        
+        for snapshot in snapshots:
+            try:
+                time.sleep(1)  # Be polite to archive.org
+                response = session.get(snapshot['url'], timeout=30)
+                
+                if response.status_code != 200:
+                    continue
+                
+                page = soup(response.text, "html.parser")
+                items = page.select(".item-cell")
+                
+                for item in items:
+                    product = parse_newegg_product(item, ddr_type)
+                    if product:
+                        # Override date with historical date
+                        product['date_scraped'] = snapshot['date']
+                        product['source'] = 'newegg_historical'
+                        products.append(product)
+                
+                print(f"    {snapshot['date']}: {len(items)} products")
+                
+            except Exception as e:
+                print(f"    {snapshot['date']}: failed - {e}")
+                continue
+    
+    return products
+
+
+def fetch_historical_data(months_back: int = 12, filename: str = "ram_data.csv"):
+    """
+    Fetch historical data from Wayback Machine and save to CSV.
+    
+    Args:
+        months_back: How many months of history to fetch
+        filename: Output CSV filename
+    """
+    print(f"Fetching {months_back} months of historical data from Wayback Machine...")
+    print("(This may take a while - being polite to archive.org)\n")
+    
+    products = scrape_wayback_newegg(months_back=months_back)
+    
+    if not products:
+        print("No historical data found")
+        return None
+    
+    new_df = pd.DataFrame(products)
+    
+    # Append to existing data if file exists
+    if Path(filename).exists():
+        existing_df = pd.read_csv(filename)
+        combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+        
+        # Deduplicate
+        dedup_cols = ['source', 'brand', 'model', 'ddr_generation', 'capacity_gb', 
+                      'frequency_mhz', 'price_usd', 'date_scraped']
+        dedup_cols = [c for c in dedup_cols if c in combined_df.columns]
+        combined_df = combined_df.drop_duplicates(subset=dedup_cols, keep='last')
+        combined_df = combined_df.sort_values(['brand', 'model', 'date_scraped'])
+        
+        combined_df.to_csv(filename, index=False)
+        print(f"\nAdded {len(new_df)} historical records, {len(combined_df)} total rows")
+        return combined_df
+    else:
+        new_df.to_csv(filename, index=False)
+        print(f"\nSaved {len(products)} historical records to {filename}")
+        return new_df
+
+
 def get_price_history(df: pd.DataFrame, brand: str = None, model: str = None) -> pd.DataFrame:
     """
     Get price history for a specific product or brand.
@@ -429,8 +585,12 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Scrape RAM prices")
     parser.add_argument("--append", action="store_true", help="Append to existing CSV (build history)")
+    parser.add_argument("--historical", type=int, metavar="MONTHS", help="Fetch N months of historical data from Wayback Machine")
     parser.add_argument("--output", "-o", default="ram_data.csv", help="Output filename")
     
     args = parser.parse_args()
     
-    save_to_csv(filename=args.output, append=args.append)
+    if args.historical:
+        fetch_historical_data(months_back=args.historical, filename=args.output)
+    else:
+        save_to_csv(filename=args.output, append=args.append)
