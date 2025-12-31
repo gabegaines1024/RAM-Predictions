@@ -28,8 +28,8 @@ def load_data(filepath: str) -> pd.DataFrame:
     Returns:
         Raw DataFrame
     """
-    # TODO: Implement
-    pass
+    df = pd.read_csv(filepath)
+    return df
 
 
 # =============================================================================
