@@ -28,6 +28,7 @@ def load_data(filepath: str) -> pd.DataFrame:
     Returns:
         Raw DataFrame
     """
+    print(f"Loading data from {filepath}...")
     df = pd.read_csv(filepath)
     return df
 
@@ -49,7 +50,7 @@ def parse_speed_column(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         DataFrame with new columns added
     """
-    
+    print(f"Parsing speed column...")
     speed_split = df['speed'].str.split(',', expand=True)
     df['ddr_gen'] = pd.to_numeric(speed_split[0], errors='coerce')
     df['speed_mhz'] = pd.to_numeric(speed_split[1], errors='coerce')
@@ -70,8 +71,12 @@ def parse_modules_column(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         DataFrame with new columns added
     """
-    # TODO: Use str.split(',', expand=True) and pd.to_numeric()
-    pass
+    print(f"Parsing modules column...")
+    modules_split = df['modules'].str.split(',', expand=True)
+    df['module_count'] = pd.to_numeric(modules_split[0], errors='coerce')
+    df['module_size'] = pd.to_numeric(modules_split[1], errors='coerce')
+    df['total_capacity'] = pd.to_numeric(lambda df: df['module_count'] * df['module_size'])
+    return df
 
 
 # =============================================================================
