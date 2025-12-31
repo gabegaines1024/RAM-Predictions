@@ -49,9 +49,11 @@ def parse_speed_column(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         DataFrame with new columns added
     """
-    # TODO: Use str.split(',', expand=True) and pd.to_numeric()
-    pass
-
+    
+    speed_split = df['speed'].str.split(',', expand=True)
+    df['ddr_gen'] = pd.to_numeric(speed_split[0], errors='coerce')
+    df['speed_mhz'] = pd.to_numeric(speed_split[1], errors='coerce')
+    return df
 
 def parse_modules_column(df: pd.DataFrame) -> pd.DataFrame:
     """
