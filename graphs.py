@@ -13,12 +13,18 @@ df = pd.read_csv('data/memory.csv')
 df = df.dropna(subset=['speed', 'modules'])
 
 # Parse the 'speed' column to extract DDR generation and MHz
-df['ddr_gen'] = df['speed'].str.split(',').str[0].astype(int)
-df['speed_mhz'] = df['speed'].str.split(',').str[1].astype(int)
+# Use pd.to_numeric with errors='coerce' to handle any parsing issues
+speed_split = df['speed'].str.split(',', expand=True)
+df['ddr_gen'] = pd.to_numeric(speed_split[0], errors='coerce')
+df['speed_mhz'] = pd.to_numeric(speed_split[1], errors='coerce')
 
 # Parse 'modules' to get module count and size
-df['module_count'] = df['modules'].str.split(',').str[0].astype(int)
-df['module_size'] = df['modules'].str.split(',').str[1].astype(int)
+modules_split = df['modules'].str.split(',', expand=True)
+df['module_count'] = pd.to_numeric(modules_split[0], errors='coerce')
+df['module_size'] = pd.to_numeric(modules_split[1], errors='coerce')
+
+# Drop any rows where parsing failed
+df = df.dropna(subset=['ddr_gen', 'speed_mhz', 'module_count', 'module_size'])
 
 numeric_cols = ['price', 'price_per_gb', 'first_word_latency', 'cas_latency', 'speed_mhz']
 
