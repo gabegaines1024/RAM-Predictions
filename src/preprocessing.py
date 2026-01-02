@@ -201,7 +201,7 @@ def build_preprocessor(numerical_cols: list, categorical_cols: list) -> ColumnTr
 
 
 # =============================================================================
-# STEP 7: CUSTOM TRANSFORMERS (OPTIONAL)
+# STEP 7: CUSTOM TRANSFORMERS
 # =============================================================================
 class LogTransformer(BaseEstimator, TransformerMixin):
     """
@@ -217,8 +217,7 @@ class LogTransformer(BaseEstimator, TransformerMixin):
         return self
     
     def transform(self, X):
-        # TODO: Return np.log1p(X) to handle zeros
-        pass
+        return np.log1p(X)
 
 
 class FeatureSelector(BaseEstimator, TransformerMixin):
