@@ -121,7 +121,9 @@ def split_data(X: pd.DataFrame, y: pd.Series, test_size: float = 0.2):
         X_train, X_test, y_train, y_test
     """
     # TODO: Use train_test_split with random_state for reproducibility
-    pass
+    print(f"Splitting data into train and test sets...")
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=42)
+    return X_train, X_test, y_train, y_test
 
 
 # =============================================================================
