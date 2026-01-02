@@ -193,8 +193,11 @@ def build_preprocessor(numerical_cols: list, categorical_cols: list) -> ColumnTr
     Returns:
         ColumnTransformer that applies correct pipeline to each column group
     """
-    # TODO: Use ColumnTransformer with the two pipelines
-    pass
+    print(f"Building preprocessor...")
+    return ColumnTransformer([
+        ('numerical', build_numerical_pipeline(), numerical_cols),
+        ('categorical', build_categorical_pipeline(), categorical_cols)
+    ], remainder='drop')
 
 
 # =============================================================================
