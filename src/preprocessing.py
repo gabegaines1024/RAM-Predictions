@@ -163,15 +163,7 @@ def get_column_groups() -> dict:
 def build_numerical_pipeline() -> Pipeline:
     """
     Purpose: Create pipeline for numerical features.
-    
-    Steps:
-        1. SimpleImputer(strategy='median') - Fill missing with median
-        2. StandardScaler() - Normalize to mean=0, std=1
-    
-    Why median? Robust to outliers (prices are often skewed).
-    Why scale? Many ML algorithms perform better with normalized features.
     """
-    # TODO: Return Pipeline with imputer and scaler
     print(f"Building numerical pipeline...")
     return Pipeline([
         ('imputer', SimpleImputer(strategy='median')),
@@ -182,16 +174,12 @@ def build_numerical_pipeline() -> Pipeline:
 def build_categorical_pipeline() -> Pipeline:
     """
     Purpose: Create pipeline for categorical features.
-    
-    Steps:
-        1. SimpleImputer(strategy='most_frequent') - Fill missing with mode
-        2. OneHotEncoder(handle_unknown='ignore') - Convert to binary columns
-    
-    Why most_frequent? Reasonable guess for missing categories.
-    Why handle_unknown='ignore'? Test set might have categories not in training.
     """
-    # TODO: Return Pipeline with imputer and encoder
-    pass
+    print(f"Building categorical pipeline...")
+    return Pipeline([
+        ('imputer', SimpleImputer(strategy='most_frequent')),
+        ('encoder', OneHotEncoder(handle_unknown='ignore'))
+    ])
 
 
 def build_preprocessor(numerical_cols: list, categorical_cols: list) -> ColumnTransformer:
