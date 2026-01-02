@@ -136,6 +136,7 @@ def get_column_groups() -> dict:
     Returns:
         Dict with 'numerical' and 'categorical' keys
     """
+    print(f"Defining column groups...")
     return {
         'numerical': [
             'speed_mhz',          # Memory speed
