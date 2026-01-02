@@ -286,7 +286,7 @@ def main():
         8. Evaluate on test data
     """
     print(f"Running main function...")
-    df = load_data("data/memory.csv")
+    df = load_data("/data/memory.csv")
     df = parse_speed_column(df)
     df = parse_modules_column(df)
     X, y = prepare_target(df)
