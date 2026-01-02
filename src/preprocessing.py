@@ -172,7 +172,11 @@ def build_numerical_pipeline() -> Pipeline:
     Why scale? Many ML algorithms perform better with normalized features.
     """
     # TODO: Return Pipeline with imputer and scaler
-    pass
+    print(f"Building numerical pipeline...")
+    return Pipeline([
+        ('imputer', SimpleImputer(strategy='median')),
+        ('scaler', StandardScaler())
+    ])
 
 
 def build_categorical_pipeline() -> Pipeline:
