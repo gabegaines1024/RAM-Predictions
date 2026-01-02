@@ -245,7 +245,7 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 # =============================================================================
 # STEP 8: FULL PIPELINE WITH MODEL
 # =============================================================================
-def build_full_pipeline(preprocessor: ColumnTransformer, model) -> Pipeline:
+def build_full_pipeline(preprocessor: ColumnTransformer, model: BaseEstimator = None) -> Pipeline:
     """
     Purpose: Chain preprocessing with model for clean fit/predict workflow.
     
@@ -262,9 +262,11 @@ def build_full_pipeline(preprocessor: ColumnTransformer, model) -> Pipeline:
     Returns:
         Complete Pipeline
     """
-    # TODO: Return Pipeline([('preprocessor', preprocessor), ('model', model)])
-    pass
-
+    print(f"Building full pipeline...")
+    return Pipeline([
+        ('preprocessor', preprocessor),
+        ('model', model) if model else Pipeline([])
+    ])
 
 # =============================================================================
 # MAIN EXECUTION
