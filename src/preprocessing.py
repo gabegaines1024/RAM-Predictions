@@ -213,10 +213,12 @@ class LogTransformer(BaseEstimator, TransformerMixin):
     Usage: Add to numerical pipeline if features are heavily skewed.
     """
     
-    def fit(self, X, y=None):
+    def fit(self, X: pd.DataFrame, y: pd.Series = None):
+        print(f"Fitting log transformer...")
         return self
     
-    def transform(self, X):
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        print(f"Applying log transformation to {X.columns}...")
         return np.log1p(X)
 
 
@@ -228,14 +230,16 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
     """
     
     def __init__(self, columns: list):
+        print(f"Initializing feature selector with columns: {columns}...")
         self.columns = columns
     
-    def fit(self, X, y=None):
+    def fit(self, X: pd.DataFrame, y: pd.Series = None):
+        print(f"Fitting feature selector...")
         return self
     
-    def transform(self, X):
-        # TODO: Return X[self.columns]
-        pass
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        print(f"Selecting columns: {self.columns}...")
+        return X[self.columns]
 
 
 # =============================================================================
