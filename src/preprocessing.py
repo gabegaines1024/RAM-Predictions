@@ -285,8 +285,16 @@ def main():
         7. Fit on training data
         8. Evaluate on test data
     """
-    # TODO: Implement the full workflow
-    pass
+    print(f"Running main function...")
+    df = load_data("data/memory.csv")
+    df = parse_speed_column(df)
+    df = parse_modules_column(df)
+    X, y = prepare_target(df)
+    X_train, X_test, y_train, y_test = split_data(X, y)
+    preprocessor = build_preprocessor(get_column_groups()['numerical'], get_column_groups()['categorical'])
+    full_pipeline = build_full_pipeline(preprocessor)
+    full_pipeline.fit(X_train, y_train)
+    print(f"Pipeline fit complete.")
 
 
 if __name__ == "__main__":
