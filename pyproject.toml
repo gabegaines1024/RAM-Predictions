@@ -5,22 +5,45 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "beautifulsoup4>=4.14.3",
-    "cloudscraper>=1.2.71",
-    "ipykernel>=7.1.0",
-    "jupyterlab>=4.5.1",
-    "keepa>=1.4.0",
-    "lxml>=6.0.2",
-    "matplotlib>=3.10.8",
+    # Data Manipulation & Math
     "numpy>=2.4.0",
-    "openpyxl>=3.1.5",
     "pandas>=2.3.3",
-    "requests>=2.32.5",
+    # Machine Learning
     "scikit-learn>=1.8.0",
-    "scipy>=1.16.3",
+    # Visualization
+    "matplotlib>=3.10.8",
     "seaborn>=0.13.2",
+    # Excel file handling
+    "openpyxl>=3.1.5",
+    # Web Scraping
+    "beautifulsoup4>=4.14.3",
+    "requests>=2.32.5",
+    "lxml>=6.0.2",
+    "cloudscraper>=1.2.71",
+    "ruff>=0.14.10",
+]
+
+[project.optional-dependencies]
+# Optional: Jupyter for notebook development
+jupyter = [
+    "jupyterlab>=4.5.1",
+    "ipykernel>=7.1.0",
+]
+
+# Optional: Additional ML models
+ml-extras = [
+    "xgboost>=3.1.2",
+    "scipy>=1.16.3",
+]
+
+# Optional: Web automation (if needed in future)
+web-automation = [
     "selenium>=4.39.0",
     "seleniumbase>=4.45.6",
     "webdriver-manager>=4.0.2",
-    "xgboost>=3.1.2",
+]
+
+# Optional: Amazon price tracking
+amazon = [
+    "keepa>=1.4.0",
 ]
