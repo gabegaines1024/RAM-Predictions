@@ -14,6 +14,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 
 
@@ -272,7 +273,7 @@ def build_full_pipeline(preprocessor: ColumnTransformer, model: BaseEstimator = 
     #return the pipeline with model if it is not None (default)
     return Pipeline(steps)
 
-def evauluate_pipeline(pipeline: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> float:
+def evaluate_model(pipeline: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> float:
     """
     Purpose: Evaluate the performance of a pipeline on the test data.
     
@@ -293,29 +294,43 @@ def evauluate_pipeline(pipeline: Pipeline, X_test: pd.DataFrame, y_test: pd.Seri
 # MAIN EXECUTION
 # =============================================================================
 def main():
-    """
-    Main function to run the full preprocessing pipeline.
-    
-    Workflow:
-        1. Load raw data
-        2. Parse compound columns (speed, modules)
-        3. Prepare target (drop rows with missing price)
-        4. Train-test split (BEFORE preprocessing!)
-        5. Build preprocessor
-        6. Build full pipeline with model
-        7. Fit on training data
-        8. Evaluate on test data
-    """
-    print(f"Running main function...")
+    # Step 1: Load and parse data
     df = load_data(Path(__file__).parent.parent / "data" / "memory.csv")
     df = parse_speed_column(df)
     df = parse_modules_column(df)
+    
+    # Step 2: Prepare features and target
     X, y = prepare_target(df)
+    
+    # Step 3: Train-test split (BEFORE preprocessing to avoid data leakage)
     X_train, X_test, y_train, y_test = split_data(X, y)
-    preprocessor = build_preprocessor(get_column_groups()['numerical'], get_column_groups()['categorical'])
-    full_pipeline = build_full_pipeline(preprocessor)
+    
+    # Step 4: Build preprocessor
+    column_groups = get_column_groups()
+    preprocessor = build_preprocessor(
+        column_groups['numerical'], 
+        column_groups['categorical']
+    )
+    
+    # Step 5: Create model
+    model = RandomForestRegressor(n_estimators=100, random_state=42)
+    
+    # Step 6: Build full pipeline (preprocessing + model)
+    full_pipeline = build_full_pipeline(preprocessor, model)
+    
+    # Step 7: Train the pipeline (preprocessing + model training)
+    print("\nTraining model...")
     full_pipeline.fit(X_train, y_train)
-    print(f"Pipeline fit complete.")
+    print("Training complete!\n")
+    
+    # Step 8: Make predictions on test set
+    print("Making predictions on test set...")
+    y_pred = full_pipeline.predict(X_test)
+    
+    # Step 9: Evaluate model performance
+    metrics = evaluate_model(y_test, y_pred)
+    
+    return full_pipeline, metrics
 
 
 if __name__ == "__main__":
