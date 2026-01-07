@@ -60,11 +60,6 @@ def compare_models(results: Dict[str, Dict[str, float]]) -> str:
     """
     Compare model results and return the best model name.
     
-    TODO:
-    1. Find the model with the lowest RMSE (or highest R²)
-    2. Print comparison table showing all models side-by-side
-    3. Return the name of the best performing model
-    
     Args:
         results: Dictionary from train_multiple_models()
     
@@ -93,11 +88,6 @@ def get_best_model(
     """
     Convenience function to train models, compare them, and return the best.
     
-    TODO:
-    1. Call train_multiple_models()
-    2. Call compare_models() to find best model name
-    3. Return tuple of (best_model_name, best_fitted_model, best_metrics)
-    
     Args:
         X_train: Training features
         y_train: Training target
@@ -107,10 +97,10 @@ def get_best_model(
     Returns:
         Tuple of (model_name, fitted_model, metrics_dict)
     """
-    # TODO: Train all models
-    # TODO: Compare and find best
-    # TODO: Return best model info
-    pass
+    
+    train_models = train_multiple_models(X_train, y_train, X_test, y_test)
+    best_model_name = compare_models(train_models)
+    return (best_model_name, train_models[best_model_name], train_models)
 
 
 if __name__ == "__main__":
@@ -118,6 +108,6 @@ if __name__ == "__main__":
     # TODO: Load and preprocess data
     # TODO: Split into train/test
     # TODO: Train and compare models
-    # TODO: Print best model results
     pass
+    # TODO: Print best model results
 
