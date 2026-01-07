@@ -1,25 +1,23 @@
 # Data Manipulation & Math
 numpy
 pandas
-matplotlib
 
 # Machine Learning
 scikit-learn
 
-# Visualization (Essential for Chapter 2 EDA)
+# Visualization
 matplotlib
 seaborn
 
-#conversion from csv to excel
+# Excel file handling
 openpyxl
-pandas-excel
 
-# Environment & Notebooks
-jupyterlab
-ipykernel
-
-#for web scraping
+# Web Scraping
 beautifulsoup4
 requests
 lxml
 cloudscraper
+
+# Jupyter (Optional - for notebook development)
+jupyterlab
+ipykernel
