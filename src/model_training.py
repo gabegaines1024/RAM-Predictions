@@ -71,12 +71,18 @@ def compare_models(results: Dict[str, Dict[str, float]]) -> str:
     Returns:
         Name of the best performing model
     """
-    # TODO: Create a DataFrame from results for easy comparison
-    # TODO: Sort by RMSE (ascending) or R² (descending)
-    # TODO: Print formatted comparison table
-    # TODO: Return best model name
-    pass
 
+    results_df = pd.DataFrame(results).T.sort_values(by='rmse')
+
+    print("\n" + "="*50)
+    print("MODEL COMPARISON RESULTS")
+    print("="*50)
+    print(results_df.sort_values(by='rmse')) #lowest RMSE on top
+
+    best_model_name = results_df['rmse'].idxmin()
+    print(f"\nBest Model: {best_model_name}")
+    print("="*50 + "\n")
+    return best_model_name
 
 def get_best_model(
     X_train: pd.DataFrame,
