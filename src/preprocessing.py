@@ -215,11 +215,11 @@ class LogTransformer(BaseEstimator, TransformerMixin):
     Usage: Add to numerical pipeline if features are heavily skewed.
     """
     
-    def fit(self, X: pd.DataFrame, y: pd.Series = None):
+    def fit(self, X, y=None):
         print(f"Fitting log transformer...")
         return self
     
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+    def transform(self, X):
         print(f"Applying log transformation to {X.columns}...")
         return np.log1p(X)
 
@@ -270,6 +270,8 @@ def build_full_pipeline(preprocessor: ColumnTransformer, model: BaseEstimator = 
         steps.append(('mo del', model))
     #return the pipeline with model if it is not None (default)
     return Pipeline(steps)
+
+
 
 # =============================================================================
 # MAIN EXECUTION
