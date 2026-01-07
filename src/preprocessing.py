@@ -14,6 +14,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.metrics import mean_squared_error, r2_score
 
 
 
@@ -271,8 +272,23 @@ def build_full_pipeline(preprocessor: ColumnTransformer, model: BaseEstimator = 
     #return the pipeline with model if it is not None (default)
     return Pipeline(steps)
 
+def evauluate_pipeline(pipeline: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> float:
+    """
+    Purpose: Evaluate the performance of a pipeline on the test data.
+    
+    Args:
+        pipeline: The pipeline to evaluate
+        X_test: The test features
+        y_test: The test target
 
-
+    Returns:
+        Tuple of (mean squared error, R^2 score)
+    """
+    print(f"Evaluating pipeline...")
+    y_pred = pipeline.predict(X_test)
+    mse = mean_squared_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+    return [{'Mean Squared Error': mse}, {'R^2 Score': r2}]
 # =============================================================================
 # MAIN EXECUTION
 # =============================================================================
