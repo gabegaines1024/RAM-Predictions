@@ -5,6 +5,7 @@ Data Summary:
                   color (505), first_word_latency (95), cas_latency (33)
 """
 
+from pathlib import Path
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -13,6 +14,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.base import BaseEstimator, TransformerMixin
+
 
 
 # =============================================================================
@@ -75,7 +77,7 @@ def parse_modules_column(df: pd.DataFrame) -> pd.DataFrame:
     modules_split = df['modules'].str.split(',', expand=True)
     df['module_count'] = pd.to_numeric(modules_split[0], errors='coerce')
     df['module_size'] = pd.to_numeric(modules_split[1], errors='coerce')
-    df['total_capacity'] = pd.to_numeric(lambda df: df['module_count'] * df['module_size'])
+    df['total_capacity'] = df['module_count'] * df['module_size']
     return df
 
 
@@ -259,14 +261,15 @@ def build_full_pipeline(preprocessor: ColumnTransformer, model: BaseEstimator = 
         preprocessor: The ColumnTransformer from step 6
         model: Any sklearn-compatible model (e.g., LinearRegression())
     
-    Returns:
-        Complete Pipeline
+        Returns:
+            Complete Pipeline
     """
     print(f"Building full pipeline...")
-    return Pipeline([
-        ('preprocessor', preprocessor),
-        ('model', model) if model else Pipeline([])
-    ])
+    steps = [('preprocessor', preprocessor)]
+    if model:
+        steps.append(('mo del', model))
+    #return the pipeline with model if it is not None (default)
+    return Pipeline(steps)
 
 # =============================================================================
 # MAIN EXECUTION
@@ -286,7 +289,7 @@ def main():
         8. Evaluate on test data
     """
     print(f"Running main function...")
-    df = load_data("/data/memory.csv")
+    df = load_data(Path(__file__).parent.parent / "data" / "memory.csv")
     df = parse_speed_column(df)
     df = parse_modules_column(df)
     X, y = prepare_target(df)
