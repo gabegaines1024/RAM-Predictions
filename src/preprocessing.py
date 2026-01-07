@@ -222,7 +222,8 @@ class LogTransformer(BaseEstimator, TransformerMixin):
         return self
     
     def transform(self, X):
-        print(f"Applying log transformation to {X.columns}...")
+        # X can be DataFrame or numpy array (after ColumnTransformer)
+        print(f"Applying log transformation...")
         return np.log1p(X)
 
 
@@ -268,12 +269,11 @@ def build_full_pipeline(preprocessor: ColumnTransformer, model: BaseEstimator = 
     """
     print(f"Building full pipeline...")
     steps = [('preprocessor', preprocessor)]
-    if model:
-        steps.append(('mo del', model))
-    #return the pipeline with model if it is not None (default)
+    if model is not None:  # Fixed: use 'is not None' instead of truthiness check
+        steps.append(('model', model))
     return Pipeline(steps)
 
-def evaluate_model(pipeline: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> float:
+def evaluate_model(pipeline: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> dict:
     """
     Purpose: Evaluate the performance of a pipeline on the test data.
     
@@ -283,13 +283,35 @@ def evaluate_model(pipeline: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) 
         y_test: The test target
 
     Returns:
-        Tuple of (mean squared error, R^2 score)
+        Dictionary with evaluation metrics
     """
-    print(f"Evaluating pipeline...")
+    from sklearn.metrics import mean_absolute_error
+    import numpy as np
+    
+    print(f"\nEvaluating model on test set...")
     y_pred = pipeline.predict(X_test)
+    
+    # Calculate metrics
     mse = mean_squared_error(y_test, y_pred)
+    rmse = np.sqrt(mse)  # Root Mean Squared Error
+    mae = mean_absolute_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
-    return [{'Mean Squared Error': mse}, {'R^2 Score': r2}]
+    
+    # Print formatted results
+    print("\n" + "="*50)
+    print("MODEL EVALUATION RESULTS")
+    print("="*50)
+    print(f"RMSE (Root Mean Squared Error): ${rmse:.2f}")
+    print(f"MAE  (Mean Absolute Error):     ${mae:.2f}")
+    print(f"R²   (R-squared):               {r2:.4f}")
+    print("="*50 + "\n")
+    
+    return {
+        'rmse': rmse,
+        'mae': mae,
+        'r2': r2,
+        'mse': mse
+    }
 # =============================================================================
 # MAIN EXECUTION
 # =============================================================================
@@ -323,12 +345,8 @@ def main():
     full_pipeline.fit(X_train, y_train)
     print("Training complete!\n")
     
-    # Step 8: Make predictions on test set
-    print("Making predictions on test set...")
-    y_pred = full_pipeline.predict(X_test)
-    
-    # Step 9: Evaluate model performance
-    metrics = evaluate_model(y_test, y_pred)
+    # Step 8: Make predictions and evaluate model performance
+    metrics = evaluate_model(full_pipeline, X_test, y_test)
     
     return full_pipeline, metrics
 
