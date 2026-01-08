@@ -32,13 +32,20 @@ def get_feature_importance(model: BaseEstimator, feature_names: List[str]) -> pd
     Returns:
         DataFrame with features and their importance scores, sorted by importance
     """
-    # TODO: Check if model has feature_importances_ (tree-based)
-    # TODO: If yes, use feature_importances_
-    # TODO: If model is linear, use abs(coef_)
-    # TODO: Create DataFrame
-    # TODO: Sort by importance descending
-    # TODO: Return DataFrame
-    pass
+
+    feature_importances = []
+    #check if model has feature_importances_ attribute
+    if hasattr(model, 'feature_importances_'):
+        feature_importances.append(model.feature_importances_)
+    elif hasattr(model, 'coef_'):
+        feature_importances.append(np.abs(model.coef_))
+    else:
+        raise ValueError("Model does not have feature_importances_ or coef_ attribute")
+    
+    return pd.DataFrame({
+        'feature': feature_names,
+        'importance': feature_importances
+    }).sort_values(by='importance', ascending=False)
 
 
 def plot_feature_importance(
