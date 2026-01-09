@@ -109,13 +109,11 @@ def analyze_feature_importance(
     Returns:
         DataFrame with feature importances
     """
-    # TODO: Get feature importance
-    # TODO: Print summary statistics
-    # TODO: Calculate cumulative importance
-    # TODO: Plot feature importance
-    # TODO: Return importance DataFrame
-    pass
 
+    importance_df = get_feature_importance(model=model, feature_names=feature_names)
+    print(f"Top {top_n} features by importance: {importance_df.head(top_n)}")
+    plot_feature_importance(importance_df=importance_df, top_n=top_n)
+    return importance_df
 
 
 def compare_feature_importance_across_models(
