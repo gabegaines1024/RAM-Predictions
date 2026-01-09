@@ -74,15 +74,17 @@ def plot_feature_importance(
         figsize: Figure size (width, height)
         save_path: Optional path to save the plot
     """
-    # TODO: Select top N features
-    # TODO: Create figure and axis
-    # TODO: Create horizontal bar plot
-    # TODO: Customize colors, labels, title
-    # TODO: Add grid
-    # TODO: Save if save_path provided
-    # TODO: Show plot
-    pass
-
+    
+    feature_importances = importance_df.head(top_n)
+    plt.figure(figsize=figsize)
+    sns.barplot(x='importance', y='feature', data=feature_importances, color='skyblue')
+    plt.title(f'Top {top_n} Feature Importances')
+    plt.xlabel('Importance')
+    plt.ylabel('Feature')
+    plt.grid(True)
+    if save_path:
+        plt.savefig(save_path)
+    plt.show()
 
 def analyze_feature_importance(
     model: BaseEstimator,
@@ -113,6 +115,7 @@ def analyze_feature_importance(
     # TODO: Plot feature importance
     # TODO: Return importance DataFrame
     pass
+
 
 
 def compare_feature_importance_across_models(
