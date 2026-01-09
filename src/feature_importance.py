@@ -135,12 +135,11 @@ def compare_feature_importance_across_models(
         feature_names: List of feature names
         top_n: Number of top features to compare
     """
-    # TODO: Get importance for each model
-    # TODO: Merge into single DataFrame
-    # TODO: Create grouped bar plot or heatmap
-    # TODO: Identify consistent important features
-    # TODO: Display results
-    pass
+    
+    importance_dfs = [get_feature_importance(model=model, feature_names=feature_names) for model in models.values()]
+    importance_df = pd.concat(importance_dfs, axis=1)
+    print(f"Comparison of feature importance across models: {importance_df}")
+    plot_feature_importance(importance_df=importance_df, top_n=top_n)
 
 
 if __name__ == "__main__":
